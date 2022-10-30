@@ -70,6 +70,14 @@ public:
     ~http_conn() {}
 
 public:
+<<<<<<< HEAD
+    void init(int sockfd, const sockaddr_in &addr);
+    void close_conn(bool real_close = true);
+    void process();
+    bool read();
+    bool write();
+
+=======
     void init(int sockfd, const sockaddr_in &addr, char *, int, int, string user, string passwd, string sqlname);
     void close_conn(bool real_close = true);
     void process();
@@ -82,6 +90,7 @@ public:
     void initmysql_result(connection_pool *connPool);
     int timer_flag;
     int improv;
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
 
 
 private:
@@ -107,8 +116,12 @@ private:
 public:
     static int m_epollfd;
     static int m_user_count;
+<<<<<<< HEAD
+    int m_state;  
+=======
     MYSQL *mysql;
     int m_state;  //读为0, 写为1
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
 
 private:
     int m_sockfd;
@@ -131,6 +144,10 @@ private:
     struct stat m_file_stat;
     struct iovec m_iv[2];
     int m_iv_count;
+<<<<<<< HEAD
+    char cwd[100];
+=======
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
  
 };
 

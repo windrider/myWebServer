@@ -1,6 +1,9 @@
 #include "http_conn.h"
+<<<<<<< HEAD
+=======
 
 #include <mysql/mysql.h>
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
 #include <fstream>
 
 //定义http响应的一些状态信息
@@ -14,7 +17,11 @@ const char *error_404_form = "The requested file was not found on this server.\n
 const char *error_500_title = "Internal Error";
 const char *error_500_form = "There was an unusual problem serving the request file.\n";
 
+<<<<<<< HEAD
+const char* doc_root="/root";
+=======
 const char* doc_root="/var/root";
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
 
 
 
@@ -27,6 +34,13 @@ int setnonblocking(int fd)
     return old_option;
 }
 
+<<<<<<< HEAD
+void addfd(int epollfd, int fd, bool one_shot)
+{
+    epoll_event event;
+    event.data.fd = fd;
+    event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
+=======
 void addfd(int epollfd, int fd, bool one_shot, int TRIGMode)
 {
     epoll_event event;
@@ -36,6 +50,7 @@ void addfd(int epollfd, int fd, bool one_shot, int TRIGMode)
         event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
     else
         event.events = EPOLLIN | EPOLLRDHUP;
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
 
     if (one_shot)
         event.events |= EPOLLONESHOT;
@@ -78,12 +93,22 @@ void http_conn::init(int sockfd, const sockaddr_in &addr)
     m_sockfd = sockfd;
     m_address = addr;
 
+<<<<<<< HEAD
+    addfd(m_epollfd, sockfd, true);
+=======
     addfd(m_epollfd, sockfd, true, m_TRIGMode);
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
     m_user_count++;
 
     init();
 }
 
+<<<<<<< HEAD
+
+void http_conn::init()
+{
+
+=======
 //初始化新接受的连接
 //check_state默认为分析请求行状态
 void http_conn::init()
@@ -91,6 +116,7 @@ void http_conn::init()
     mysql = NULL;
     bytes_to_send = 0;
     bytes_have_send = 0;
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
     m_check_state = CHECK_STATE_REQUESTLINE;
     m_linger = false;
     m_method = GET;
@@ -103,7 +129,11 @@ void http_conn::init()
     m_read_idx = 0;
     m_write_idx = 0;
 
+<<<<<<< HEAD
+    getcwd(cwd,100);
+=======
 
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
     memset(m_read_buf, '\0', READ_BUFFER_SIZE);
     memset(m_write_buf, '\0', WRITE_BUFFER_SIZE);
     memset(m_real_file, '\0', FILENAME_LEN);
@@ -180,11 +210,14 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
     char *method = text;
     if (strcasecmp(method, "GET") == 0)
         m_method = GET;
+<<<<<<< HEAD
+=======
     else if (strcasecmp(method, "POST") == 0)
     {
         m_method = POST;
         cgi = 1;
     }
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
     else
         return BAD_REQUEST;
     m_url += strspn(m_url, " \t");
@@ -249,7 +282,11 @@ http_conn::HTTP_CODE http_conn::parse_headers(char *text)
     }
     else
     {
+<<<<<<< HEAD
+        printf("oop!unknow header: %s", text);
+=======
         LOG_INFO("oop!unknow header: %s", text);
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
     }
     return NO_REQUEST;
 }
@@ -267,6 +304,10 @@ http_conn::HTTP_CODE http_conn::parse_content(char *text)
 
 http_conn::HTTP_CODE http_conn::process_read()
 {
+<<<<<<< HEAD
+    //printf("now process_read\n");
+=======
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
     LINE_STATUS line_status = LINE_OK;
     HTTP_CODE ret = NO_REQUEST;
     char *text = 0;
@@ -314,6 +355,20 @@ http_conn::HTTP_CODE http_conn::process_read()
 
 http_conn::HTTP_CODE http_conn::do_request()
 {
+<<<<<<< HEAD
+    char url[100];
+    if(strlen(m_url)<2){
+        strcpy(url,"/index.html");
+    }
+    else{
+        strcpy(url,m_url);
+    }
+    strcpy(m_real_file, cwd);
+    strcat(m_real_file,doc_root);
+    int len = strlen(m_real_file);
+    strncpy(m_real_file + len, url, FILENAME_LEN - len - 1);
+    //printf("now do request,m_real_file is %s\n",m_real_file);
+=======
     strcpy(m_real_file, doc_root);
     int len = strlen(doc_root);
     //printf("m_url:%s\n", m_url);
@@ -426,6 +481,7 @@ http_conn::HTTP_CODE http_conn::do_request()
     else
         strncpy(m_real_file + len, m_url, FILENAME_LEN - len - 1);
 
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
     if (stat(m_real_file, &m_file_stat) < 0)
         return NO_RESOURCE;
 
@@ -450,11 +506,22 @@ void http_conn::unmap()
 }
 bool http_conn::write()
 {
+<<<<<<< HEAD
+    //printf("now write\n");
+    int temp = 0;
+    int bytes_have_send=0;
+    int bytes_to_send=m_write_idx;
+
+    if (bytes_to_send == 0)
+    {
+        modfd(m_epollfd, m_sockfd, EPOLLIN);
+=======
     int temp = 0;
 
     if (bytes_to_send == 0)
     {
         modfd(m_epollfd, m_sockfd, EPOLLIN, m_TRIGMode);
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
         init();
         return true;
     }
@@ -467,7 +534,11 @@ bool http_conn::write()
         {
             if (errno == EAGAIN)
             {
+<<<<<<< HEAD
+                modfd(m_epollfd, m_sockfd, EPOLLOUT);
+=======
                 modfd(m_epollfd, m_sockfd, EPOLLOUT, m_TRIGMode);
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
                 return true;
             }
             unmap();
@@ -491,7 +562,11 @@ bool http_conn::write()
         if (bytes_to_send <= 0)
         {
             unmap();
+<<<<<<< HEAD
+            modfd(m_epollfd, m_sockfd, EPOLLIN);
+=======
             modfd(m_epollfd, m_sockfd, EPOLLIN, m_TRIGMode);
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
 
             if (m_linger)
             {
@@ -520,7 +595,10 @@ bool http_conn::add_response(const char *format, ...)
     m_write_idx += len;
     va_end(arg_list);
 
+<<<<<<< HEAD
+=======
     LOG_INFO("request:%s", m_write_buf);
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
 
     return true;
 }
@@ -555,6 +633,11 @@ bool http_conn::add_content(const char *content)
 }
 bool http_conn::process_write(HTTP_CODE ret)
 {
+<<<<<<< HEAD
+    //printf("now process write,ret is %d\n",ret);
+    
+=======
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
     switch (ret)
     {
     case INTERNAL_ERROR:
@@ -592,7 +675,10 @@ bool http_conn::process_write(HTTP_CODE ret)
             m_iv[1].iov_base = m_file_address;
             m_iv[1].iov_len = m_file_stat.st_size;
             m_iv_count = 2;
+<<<<<<< HEAD
+=======
             bytes_to_send = m_write_idx + m_file_stat.st_size;
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
             return true;
         }
         else
@@ -609,15 +695,26 @@ bool http_conn::process_write(HTTP_CODE ret)
     m_iv[0].iov_base = m_write_buf;
     m_iv[0].iov_len = m_write_idx;
     m_iv_count = 1;
+<<<<<<< HEAD
+=======
     bytes_to_send = m_write_idx;
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
     return true;
 }
 void http_conn::process()
 {
+<<<<<<< HEAD
+    //printf("now read\n");
+    HTTP_CODE read_ret = process_read();
+    if (read_ret == NO_REQUEST)
+    {
+        modfd(m_epollfd, m_sockfd, EPOLLIN);
+=======
     HTTP_CODE read_ret = process_read();
     if (read_ret == NO_REQUEST)
     {
         modfd(m_epollfd, m_sockfd, EPOLLIN, m_TRIGMode);
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
         return;
     }
     bool write_ret = process_write(read_ret);
@@ -625,5 +722,9 @@ void http_conn::process()
     {
         close_conn();
     }
+<<<<<<< HEAD
+    modfd(m_epollfd, m_sockfd, EPOLLOUT);
+=======
     modfd(m_epollfd, m_sockfd, EPOLLOUT, m_TRIGMode);
+>>>>>>> 3a920beb45e94c75130ed1fbb28e64a9726078b6
 }
