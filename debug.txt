@@ -1,0 +1,3 @@
+如果出错,执行close_conn()时不会删除定时器，会一直close同一个fd
+
+reset by peer没有 keep-alive

@@ -72,6 +72,7 @@ void time_heap::add_timer(heap_timer *timer)
     }
     int hole = cur_size++;
     int parent = 0;
+    
     for (; hole > 0; hole = parent)
     {
         parent = (hole - 1) / 2;
@@ -81,6 +82,7 @@ void time_heap::add_timer(heap_timer *timer)
         }
         array[hole] = array[parent];
     }
+    
     array[hole] = timer;
 }
 

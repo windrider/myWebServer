@@ -17,10 +17,11 @@
 
 #define MAX_FD 65536
 #define MAX_EVENT_NUMBER 10000
-#define TIMESLOT 5
+#define TIMESLOT 20
 
 static int pipefd[2];
 static time_heap ti_heap(10000);
+static client_data* clients=new client_data[MAX_FD];
 static int epollfd;
 
 extern int addfd(int epollfd, int fd, bool one_shot);
@@ -63,7 +64,7 @@ void cb_func(client_data* user_data){
     epoll_ctl(epollfd,EPOLL_CTL_DEL,user_data->sockfd,0);
     assert(user_data);
     close(user_data->sockfd);
-    printf("close fd %d\n", user_data->sockfd);
+    //printf("cbfunc close fd %d\n", user_data->sockfd);
 }
 
 int main(int argc, char *argv[])
@@ -127,7 +128,6 @@ int main(int argc, char *argv[])
     
     addsig(SIGALRM,sig_handler);
     addsig(SIGTERM,sig_handler);
-    client_data* clients=new client_data[MAX_FD];
     bool timeout=false;
     bool stop_server=false;
     alarm(TIMESLOT);
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
                     show_error(connfd, "Internal server busy");
                     continue;
                 }
-                printf("get connection, connfd is %d\n",connfd);
+                //printf("get connection, connfd is %d\n",connfd);
                 users[connfd].init(connfd, client_address);
 
                 clients[connfd].address=client_address;
@@ -195,7 +195,17 @@ int main(int argc, char *argv[])
             }
             else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
             {
-                users[sockfd].close_conn();
+                if(events[i].events & EPOLLRDHUP)("EPOLLRDHUP\n");
+                if(events[i].events & EPOLLHUP)("EPOLLHUP\n");
+                if(events[i].events & EPOLLERR)("EPOLLERR\n");
+                cb_func(&clients[sockfd]);
+    
+                heap_timer *timer = clients[sockfd].timer;
+                if (timer)
+                {
+                    ti_heap.del_timer(timer);
+                }
+                
             }
             else if (events[i].events & EPOLLIN)
             {
@@ -205,7 +215,7 @@ int main(int argc, char *argv[])
                     if(timer){
                         time_t cur=time(NULL);
                         timer->expire=cur+3*TIMESLOT;
-                        printf("connection %d adjust timer\n",sockfd);
+                        //printf("connection %d adjust timer\n",sockfd);
                         ti_heap.add_timer(timer);
                         ti_heap.del_timer(clients[sockfd].timer);
                     }
@@ -213,15 +223,34 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    ti_heap.del_timer(timer);
-                    users[sockfd].close_conn();
+                  
+                    cb_func(&clients[sockfd]);
+                    if (timer)
+                    {
+                        ti_heap.del_timer(timer);
+                    }
                 }
             }
             else if (events[i].events & EPOLLOUT)
             {
-                if (!users[sockfd].write())
+                heap_timer* timer=new heap_timer(clients[sockfd].timer);
+                if (users[sockfd].write())
                 {
-                    users[sockfd].close_conn();
+                    if(timer){
+                        time_t cur=time(NULL);
+                        timer->expire=cur+3*TIMESLOT;
+                        //printf("connection %d adjust timer\n",sockfd);
+                        ti_heap.add_timer(timer);
+                        ti_heap.del_timer(clients[sockfd].timer);
+                    }
+                }
+                else{
+               
+                    cb_func(&clients[sockfd]);
+                    if (timer)
+                    {
+                        ti_heap.del_timer(timer);
+                    }
                 }
             }
             else

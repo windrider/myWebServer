@@ -81,7 +81,6 @@ void *threadpool<T>::worker(void *arg)
 template <typename T>
 void threadpool<T>::run()
 {
-    printf("now run\n");
     while (!m_stop)
     {
         m_queuestat.wait();
